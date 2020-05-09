@@ -1,32 +1,12 @@
-
-import pandas as pd
-import numpy as np
-import requests
-import time
-
 from splinter import Browser
 from bs4 import BeautifulSoup
 from selenium import webdriver
-
-
-##import requests
-##from urllib import request, response, error, parse
-#from urllib.request import urlopen
-
-
-# Scrape the NASA Mars News Site and collect the latest News Title and Paragraph Text
-
-# In[2]:
-
-
-get_ipython().system('which chromedriver')
-
-
-# In[3]:
+import pandas as pd
+import time
 
 
 def init_browser():
-    executable_path = {'executable_path':'/c/Users/aadol/Documents/bin/chromedriver'}
+    
     browser = Browser('chrome', headless=False)
     return browser
 
@@ -50,18 +30,50 @@ def title_and_para():
     print(latest_title)
 
     #Paragraph Text
-    para_text = soup.find('div', class_ = 'article_teaser_body')
+    
+    browser = init_browser()
+
+    url = "https://mars.nasa.gov/news/"
+    browser.visit(url)
+    time.sleep(1)
+
+    html = browser.html
+    soup = BeautifulSoup(html, "html.parser")
+
+    article_heading_list = []
+
+    for article_heading in soup.find_all('div',class_="content_title"):
+    
+        try:        
+            article_heading_list.append(article_heading.find('a').text)
+        except:
+            pass
+        
+    news_title = article_heading_list[0]
+
+    article_paragraph_list = []
+
+    for article_para in soup.find_all('div',class_="article_teaser_body"):
+        
+        try:        
+            article_paragraph_list.append(article_para.text)
+        except:
+            pass
+
+    news_p = article_paragraph_list[0]
+
+    title_paragraph_dict = {"news_title": news_title, "news_p": news_p}
+
     browser.quit()
-    print(para_text.text)
+
+    return title_paragraph_dict
 
 
 # ### JPL Mars Space Images - Featured Image
-def featured_image():
+def mars_image():
 
     browser = init_browser()
-    executable_path = {'executable_path':'/c/Users/aadol/Documents/bin/chromedriver'}
-    browser = Browser('chrome', headless=False)
-
+    
     url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
     browser.visit(url)
     time.sleep(1)
@@ -78,26 +90,24 @@ def featured_image():
     
 
     space_image = []
-    jpl_image = soup.find_all("div", class_ = "img")
+    mars_image = soup.find_all("div", class_ = "img")
     for image in results:
         space_image.append(image.img["src"])
     
 
     mars_image = space_image[0]
 
-    mars_image_url = "https://www.jpl.nasa.gov" + feature_image
+    mars_image_url = "https://www.jpl.nasa.gov" + mars_image
 
-    print("Feature Image URL:", mars_image_url)
+    mars_image_dict = {"image": mars_image_url}
 
     browser.quit()
-    mars_image_url
+
+    return mars_image_dict
 
 
-def mars_weather()
+""" def mars_weather():
     browser = init_browser()
-
-    executable_path = {'executable_path':'/c/Users/aadol/Documents/bin/chromedriver'}
-    browser = Browser('chrome', headless=False)
 
 
     url = "https://twitter.com/marswxreport?lang=en"
@@ -113,15 +123,15 @@ def mars_weather()
     if browser.is_element_present_by_xpath(xpath, wait_time = 5):
         news = browser.find_by_xpath(xpath).text
 
+    mars_weather_dict = {"mars_weather": news}
+
     browser.quit()
-    print(news)
+    return mars_weather_dict"""
 
 
 
-
-def mars_facts
+def mars_facts():
     browser = init_browser()
-
 
     url = "https://space-facts.com/mars/"
     tables = pd.read_html(url)
@@ -129,18 +139,18 @@ def mars_facts
     mars_df.columns = mars_df.columns.astype(str)
     mars_df = mars_df.rename(columns = {"0": "Parameters", "1": "Values"})
     mars_df
+    mars_df_to_html = mars_df.to_html("mars_facts_table.html")
+
+    mars_df_to_html_dict = {"mars_fact": mars_df_to_html}
+
+    return mars_df_to_html_dict
 
 
-def mars Hemispheres
+
+def mars_hemis():
     browser = init_browser()
 
-    html_mars = mars_df.to_html(header=False, index=False)
-
-    print(html_mars)
-
-    executable_path = {'executable_path':'/c/Users/aadol/Documents/bin/chromedriver'}
-    browser = Browser('chrome', headless=False)
-
+    
     url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
     browser.visit(url)
 
@@ -160,39 +170,39 @@ def mars Hemispheres
     mars_hemis
 
 
-#Save image URL
-full_resolution_img = []
 
-for i in range(len(img_hrefs)):
-    url = img_hrefs[i]
-    browser.visit(url)
-    html = browser.html
-    soup = BeautifulSoup(html, "html.parser")
-    result = soup.find("img", class_ = "wide-image")["src"]
-    full_resolution = base_url + result
-    full_resolution_img.append(full_resolution)
+    full_resolution_img = []
+
+    for i in range(len(img_hrefs)):
+        url = img_hrefs[i]
+        browser.visit(url)
+        html = browser.html
+        soup = BeautifulSoup(html, "html.parser")
+        result = soup.find("img", class_ = "wide-image")["src"]
+        full_resolution = base_url + result
+        full_resolution_img.append(full_resolution)
     
-    full_resolution_img
+        full_resolution_img
     
 
-hemis_image_urls = []
-hemis_image_urls_dict = {}
-
-for i in range(4):
-    hemis_image_urls_dict["title"] = titles[i]
-    hemis_image_urls_dict["img_url"] = full_resolution_img[i]
-    hemis_image_urls.append(hemis_image_urls_dict)
+    hemis_image_urls = []
     hemis_image_urls_dict = {}
 
-browser.quit()
-return hemis_image_urls
+    for i in range(4):
+        # hemis_image_urls_dict["title"] = title[i]
+        hemis_image_urls_dict["img_url"] = full_resolution_img[i]
+        hemis_image_urls.append(hemis_image_urls_dict)
+        hemis_image_urls_dict = {}
+
+    browser.quit()
+    return hemis_image_urls
 
 if __name__ == "__main__":
     print("\nTesting Data Retrieval:....\n")
     print(title_and_para())
-    print(featured_image())
-    print(mars_weather())
-    print(mars_hemispheres())
+    print(mars_image())
+    # print(mars_weather()) 
+    print(mars_hemis()) 
     print("\nProcess Complete!\n")
 
 
